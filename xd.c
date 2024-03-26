@@ -38,7 +38,7 @@ int main(void) {
         }
 
         // Wykonanie działań zależnych od wartości podprogramu
-        if (podprogram == 1) {
+        if (podprogram == 0) {
             unsigned portValue = 0;
             TRISA = 0x0000;
             while(1) {
@@ -46,14 +46,30 @@ int main(void) {
                 __delay32(1000000);
                 portValue++;
             }
-        } else if (podprogram == 0) {
+        } else if (podprogram == 2) {
             unsigned portValue = 255;
             TRISA = 0x0000;
             while(1) {
                 LATA = portValue;
                 __delay32(1000000);
                 portValue--;
+            } else if (podprogram == 2) {
+            unsigned char portValue = 0;
+            TRISA = 0x0000;
+            while(1) {
+                unsigned char grayValue = IntToGray(portValue); // Konwersja na kod Graya
+                LATA = grayValue;
+                __delay32(1000000);
+                
+                // Inkrementacja portValue w kodzie Graya
+                portValue++;
+                if (portValue == 0) // Przejście na wartość 00000000 zamiast 11111111
+                    portValue = 1;
             }
+        }
+    }
+    return 0;
+}        
         }
     }
     return 0;
