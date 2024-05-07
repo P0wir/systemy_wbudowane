@@ -83,8 +83,9 @@ void generator(int liczba)
 
 int main(void) {
     int isDefined = 0;
-    int podprogram = 1;
+    int podprogram = 8;
     char currentS6 = 0, prevS6 = 0, currentS7 = 0, prevS7 = 0;
+    int d = 255;
     while(1) {
         LATA = portValue;
         delay_ms(50);
@@ -121,11 +122,10 @@ int main(void) {
             {
                 portValue = 255;
                 isDefined = 1;
+                d = 255;
             }
-            else {
-                LATA = IntToGray(portValue);
-                portValue--;
-            }
+            portValue = IntToGray(d);
+            d--;
         }
         else if (podprogram == 5) {
             if(isDefined == 0)
