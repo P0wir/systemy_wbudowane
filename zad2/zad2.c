@@ -34,32 +34,52 @@ int main(void) {
 
     while(1) {
         prevS6 = PORTDbits.RD6; 
+        __delay32(15000);
         currentS6 = PORTDbits.RD6;
-        // Sprawdź, czy przyciski są wciśnięte
-        if (currentS6 - prevS6 = 1) {
-            // Wyłącz alarm
-            LATA = 0;
-            continue;
+        if (currentS6 - prevS6 == -1) {
+           LATA = 0; 
         }
 
         while(!AD1CON1bits.DONE);
         portValue = ADC1BUF0;
 
-        // Sprawdź, czy przekroczono wartość 127
-        if (portValue > 127) {
-            // Migotanie diody przez 5 sekund
-            for (int i = 0; i < 5; ++i) {
-                LATA = 0b00000001; // Zapal jedną diodę
-                __delay32(5000000); //
-                LATA = 0; // Wyłącz diodę
-                __delay32(1000000); //
+        if (portValue > 512) {
+            __delay32(40000); 
+            for (int i = 0; i < 1000; i++) {
+                if (currentS6 - prevS6 == -1) {
+                   LATA = 0;
+                   __delay32(30000000); 
+                   break; 
+                }
+                if (ADC1BUF0 < 512) {
+                    LATA = 0;
+                    __delay32(30000000);
+                    break;
+                }
+                LATA = 0b0000001;
+                __delay32(40000);
+                LATA = 0;  
             }
-            // Po zakończeniu migotania, zapal wszystkie diody
-            LATA = 255;
-        } else {
-            // Jeśli wartość nie przekroczyła 127, ustaw LATA na wartość odczytaną z ADC
-            LATA = portValue;
-        }
+            while (1) {
+                prevS6 = PORTDbits.RD6; 
+                __delay32(15000);
+                currentS6 = PORTDbits.RD6;
+                
+                if (currentS6 - prevS6 == -1) {
+                    LATA = 0;
+                    __delay32(100000000); 
+                    break; 
+                }
+                
+                if (ADC1BUF0 > 512) {
+                    LATA = 0b11111111;
+                } else {
+                    LATA = 0;
+                    __delay32(30000000);
+                    break;
+                }
+            }
+        } 
     }
 
     return 0;
