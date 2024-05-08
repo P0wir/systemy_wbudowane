@@ -127,25 +127,25 @@ void LCD_init(){
 // Zdefiniowanie znaku niestandardowego w postaci tablicy 8x5 (8 linii po 5 kropek)
 
 unsigned char symbol1[8] = {
-    0b00100,
-    0b00100,
-    0b00100,
-    0b01110,
     0b11111,
-    0b01110,
-    0b00100,
-    0b00100
+    0b10101,
+    0b10101,
+    0b11111,
+    0b11111,
+    0b11111,
+    0b10101,
+    0b11111
 };
 
 unsigned char symbol2[8] = {
-    0b10101,
     0b00100,
-    0b10101,
-    0b01110,
+    0b00100,
+    0b00100,
     0b11111,
-    0b01110,
-    0b00100,
-    0b10101
+    0b11111,
+    0b11111,
+    0b11111,
+    0b11111
 };
 
 int main(void) {
@@ -157,8 +157,10 @@ int main(void) {
     LCD_saveCustChar(0, symbol1);   // Zapisanie znaku 'symbol1' do pamieci CGRAM
     LCD_saveCustChar(1, symbol2);   // Zapisanie znaku 'symbol2' do pamieci CGRAM
     LCD_setCursor(1,0);             // Ustawienie kursora na poczatku pierwszej linii
-    LCD_print("sklep owocow i warzyw")
+    LCD_print("sklep owocow i warzyw");
     LCD_setCursor(2,0);
+    LCD_sendData(0); //wyswietlenie symbolu 1
+    LCD_sendData(1); //wyswietlenie symbolu 2
     LCD_sendData(0);
     LCD_sendData(1);
     LCD_sendData(0);
@@ -171,10 +173,17 @@ int main(void) {
     LCD_sendData(1);
     LCD_sendData(0);
     LCD_sendData(1);
+    LCD_sendData(0);
+    LCD_sendData(1);
+    LCD_sendData(0);
+    LCD_sendData(1);
+    LCD_sendData(0);
+    LCD_sendData(1);
+    LCD_sendData(0);
     while(1)
-    {// Wyswietlenie znaku ze slotu 0 w pamieci CGRAM
+    {
         __delay_ms(500);
-        LCD_sendCommand(LCD_SHIFT_R)    // Przesuniecie calej zawartosci o jedno miejsce w prawo
+        LCD_sendCommand(LCD_SHIFT_L) ;   // Przesuniecie calej zawartosci o jedno miejsce w lewo
     }
     return 0;
 }
