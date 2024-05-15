@@ -124,7 +124,7 @@ void podprogram1(void) {
         currentS6 = PORTDbits.RD6;
         currentS7 = PORTDbits.RD7;
         if(currentS6 - prevS6 == 1){
-            podprogram++;
+            podprogram2();
             portValue=255;
             break;
         }
@@ -148,14 +148,14 @@ void podprogram2(void) {
         currentS6 = PORTDbits.RD6;
         currentS7 = PORTDbits.RD7;
         if(currentS6 - prevS6 == 1){
-            podprogram++;
             portValue=0;
+            podprogram3();
             break;
         }
         
         if(currentS7 - prevS7 == 1){
-            podprogram--;
             portValue=0;
+            podprogram1();
             break;
         }
     }
@@ -173,14 +173,14 @@ void podprogram3(void) {
         currentS6 = PORTDbits.RD6;
         currentS7 = PORTDbits.RD7;
         if(currentS6 - prevS6 == 1){
-            podprogram++;
             portValue=255;
+            podprogram4();
             break;
         }
         
         if(currentS7 - prevS7 == 1){
-            podprogram--;
             portValue=255;
+            podprogram2();
             break;
         }
     }
@@ -198,14 +198,14 @@ void podprogram4(void) {
         currentS6 = PORTDbits.RD6;
         currentS7 = PORTDbits.RD7;
         if(currentS6 - prevS6 == 1){
-            podprogram++;
             bcd = 0;
+            podprogram5();
             break;
         }
         
         if(currentS7 - prevS7 == 1){
-            podprogram--;
             portValue=0;
+            podprogram3();
             break;
         }
     }
@@ -231,14 +231,14 @@ void podprogram5(void) {
         currentS6 = PORTDbits.RD6;
         currentS7 = PORTDbits.RD7;
         if(currentS6 - prevS6 == 1){
-            podprogram++;
             bcd = 99;
+            podprogram6();
             break;
         }
         
         if(currentS7 - prevS7 == 1){
-            podprogram--;
             portValue=255;
+            podprogram4();
             break;
         }
     }
@@ -265,14 +265,14 @@ void podprogram6(void) {
         currentS6 = PORTDbits.RD6;
         currentS7 = PORTDbits.RD7;
         if(currentS6 - prevS6 == 1){
-            podprogram++;
             portValue = 7;
+            podprogram7();
             break;
         }
         
         if(currentS7 - prevS7 == 1){
-            podprogram--;
             bcd=0;
+            podprogram5();
             break;
         }
     }
@@ -306,14 +306,14 @@ void podprogram7(void) {
         currentS6 = PORTDbits.RD6;
         currentS7 = PORTDbits.RD7;
         if(currentS6 - prevS6 == 1){
-            podprogram++;
             portValue = 1;
+            podprogram8();
             break;
         }
         
         if(currentS7 - prevS7 == 1){
-            podprogram--;
             bcd=99;
+            podprogram6();
             break;
         }
     }
@@ -337,8 +337,8 @@ void podprogram8(void) {
         }
         
         if(currentS7 - prevS7 == 1){
-            podprogram--;
             portValue=7;
+            podprogram7();
             break;
         }
         if (portValue == 128) {
@@ -377,7 +377,7 @@ void podprogram8(void) {
         }
         else if(portValue == 255)
         {
-            break;
+            portValue = 1;
         }
         else {
             portValue += a;
