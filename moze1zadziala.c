@@ -129,7 +129,7 @@ void podprogram6(){
     LATA = portValue;
 }
 
-void snake(){
+void podprogram7(){
     static int left = 1;
     if(left == 1) {
         portValue = portValue * 2;
@@ -144,7 +144,7 @@ void snake(){
     }
 }
 
-void queue(){
+void podprogram8(){
      if (portValue == 128) {
             a = 1;
             portValue = 129;
