@@ -17,8 +17,6 @@
 #pragma config GCP = OFF                // General Code Segment Code Protect (Code protection is disabled)
 #pragma config JTAGEN = OFF             // JTAG Port Enable (JTAG port is disabled)
 
-#define DELAY_MS 1000 // 1 sekunda
-
 
 int main(void) {
     unsigned portValue = 0;
@@ -31,6 +29,7 @@ int main(void) {
     AD1CHS = 0;
     AD1CSSL = 0X0020;
     char prevS6 = 0, currentS6 = 0;
+    char flag = 1;
 
     while(1) {
         prevS6 = PORTDbits.RD6; 
@@ -44,39 +43,49 @@ int main(void) {
         portValue = ADC1BUF0;
 
         if (portValue > 512) {
-            __delay32(40000); 
-            for (int i = 0; i < 1000; i++) {
+            flag = 1;
+            for (int i = 0; i < 40; i++) {
+                prevS6 = PORTDbits.RD6; 
+                __delay32(1500000);
+                currentS6 = PORTDbits.RD6;
                 if (currentS6 - prevS6 == -1) {
                    LATA = 0;
+                   flag = 0; 
+                   i = 0;
                    __delay32(30000000); 
                    break; 
                 }
-                if (ADC1BUF0 < 512) {
+                else if (ADC1BUF0 < 512) {
                     LATA = 0;
-                    __delay32(30000000);
+                    flag = 1;
+                    i = 0;
+                    __delay32(8000000);
                     break;
                 }
                 LATA = 0b0000001;
-                __delay32(40000);
-                LATA = 0;  
+                __delay32(400000);
+                LATA = 0b0000000;
+                __delay32(400000); 
             }
-            while (1) {
-                prevS6 = PORTDbits.RD6; 
-                __delay32(15000);
-                currentS6 = PORTDbits.RD6;
-                
-                if (currentS6 - prevS6 == -1) {
-                    LATA = 0;
-                    __delay32(100000000); 
-                    break; 
-                }
-                
-                if (ADC1BUF0 > 512) {
-                    LATA = 0b11111111;
-                } else {
-                    LATA = 0;
-                    __delay32(30000000);
-                    break;
+            if (flag) {
+                while (1) {
+                    prevS6 = PORTDbits.RD6; 
+                    __delay32(15000);
+                    currentS6 = PORTDbits.RD6;
+                    
+                    if (currentS6 - prevS6 == -1) {
+                        LATA = 0;
+                        __delay32(10000000); 
+                        break; 
+                    }
+                    
+                    if (ADC1BUF0 > 512) {
+                        LATA = 0b11111111;
+                    } else {
+                        LATA = 0;
+                        __delay32(3000000);
+                        break;
+                    }
                 }
             }
         } 
