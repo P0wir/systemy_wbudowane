@@ -122,8 +122,9 @@ int main(void) {
     display_time(2, player2_time / 60, player2_time % 60);
 
     while (1) {
+        prevS6 = PORTDbits.RD6; 
+        __delay_ms(998);
         currentS6 = PORTDbits.RD6;
-        __delay32(15000);  // Delay to debounce the button
 
         if (currentS6 != prevS6) {
             if (currentS6 == 1) {
@@ -144,7 +145,6 @@ int main(void) {
             }
         }
 
-        __delay_ms(1000);
 
         if (player1_time == 0 || player2_time == 0) {
             break;
@@ -152,6 +152,7 @@ int main(void) {
     }
 
     LCD_clear();
+    __delay_ms(2);
     if (player1_time == 0) {
         LCD_setCursor(1, 0);
         LCD_print((unsigned char *)"Player 2 Wins!");
