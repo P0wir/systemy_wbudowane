@@ -76,8 +76,7 @@ void LCD_setCursor(unsigned char row, unsigned char col) {
     unsigned char address;
     if (row == 1) {
         address = LCD_CURSOR + LINE1 + col;
-    }
-    if (row == 2) {
+    } else if (row == 2) {
         address = LCD_CURSOR + LINE2 + col;
     }
     LCD_sendCommand(address);
@@ -97,57 +96,83 @@ void LCD_init() {
     LCD_clear();
 }
 
+void LCD_printChar(char c) {
+    LCD_sendData((unsigned char)c);
+}
+
+void LCD_printTime(int minutes, int seconds) {
+    LCD_printChar((minutes / 10) + '0');
+    LCD_printChar((minutes % 10) + '0');
+    LCD_printChar(':');
+    LCD_printChar((seconds / 10) + '0');
+    LCD_printChar((seconds % 10) + '0');
+}
+
 void display_time(unsigned char row, int minutes, int seconds) {
-    char buffer[9];
-    sprintf(buffer, "%02d:%02d", minutes, seconds);
     LCD_setCursor(row, 0);
-    LCD_print((unsigned char *)buffer);
+    LCD_printTime(minutes, seconds);
 }
 
 int main(void) {
-    TRISA = 0X0000;
-    TRISB = 0XFFFF;
+    TRISA = 0x0000;
+    TRISB = 0xFFFF;
+    TRISD = 0xFFFF; // Configure PORTD as input
 
     LCD_init();
 
     int player1_time = 600;
     int player2_time = 600;
     int current_player = 1;
+    int is_started = 0;
 
     int prevS6 = PORTDbits.RD6;
     int currentS6;
+    int prevS7 = PORTDbits.RD7;
+    int currentS7;
 
     LCD_clear();
     display_time(1, player1_time / 60, player1_time % 60);
     display_time(2, player2_time / 60, player2_time % 60);
 
     while (1) {
-        prevS6 = PORTDbits.RD6; 
-        __delay_ms(998);
-        currentS6 = PORTDbits.RD6;
+        prevS7 = PORTDbits.RD7; 
+        __delay_ms(998); 
+        currentS7 = PORTDbits.RD7;
 
-        if (currentS6 != prevS6) {
-            if (currentS6 == 1) {
-                current_player = (current_player == 1) ? 2 : 1;
+        if (currentS7 != prevS7) {
+            if (currentS7 == 1) {
+                is_started = 1; 
             }
-            prevS6 = currentS6;
+            prevS7 = currentS7;
         }
 
-        if (current_player == 1) {
-            if (player1_time > 0) {
-                player1_time--;
-                display_time(1, player1_time / 60, player1_time % 60);
-            }
-        } else {
-            if (player2_time > 0) {
-                player2_time--;
-                display_time(2, player2_time / 60, player2_time % 60);
-            }
-        }
+        if (is_started) {
+            prevS6 = PORTDbits.RD6;
+            __delay_ms(998);
+            currentS6 = PORTDbits.RD6;
 
+            if (currentS6 != prevS6) {
+                if (currentS6 == 1) {
+                    current_player = (current_player == 1) ? 2 : 1;
+                }
+                prevS6 = currentS6;
+            }
 
-        if (player1_time == 0 || player2_time == 0) {
-            break;
+            if (current_player == 1) {
+                if (player1_time > 0) {
+                    player1_time--;
+                    display_time(1, player1_time / 60, player1_time % 60);
+                }
+            } else {
+                if (player2_time > 0) {
+                    player2_time--;
+                    display_time(2, player2_time / 60, player2_time % 60);
+                }
+            }
+
+            if (player1_time == 0 || player2_time == 0) {
+                break;
+            }
         }
     }
 
