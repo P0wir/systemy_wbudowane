@@ -19,6 +19,9 @@
 #pragma config GCP = OFF // Code protection is disabled
 #pragma config JTAGEN = OFF // JTAG port is disabled
 
+#include "xc.h"
+#include <libpic30.h>
+
 #define FCY 4000000UL
 
 #define LCD_E LATDbits.LATD4
@@ -37,18 +40,16 @@
 #define LCD_SHIFT_R 0x1D
 #define LCD_SHIFT_L 0x1B
 
-#include "xc.h"
-#include <libpic30.h>
 
-void __delay_us(unsigned long us) {
-    __delay32(us * FCY / 1000000);
+void __delay_us(unsigned long us){
+    __delay32(us*FCY/1000000);
 }
 
-void __delay_ms(unsigned long ms) {
-    __delay32(ms * FCY / 1000);
+void __delay_ms(unsigned long ms){
+    __delay32(ms*FCY/1000);
 }
 
-void LCD_sendCommand(unsigned char command) {
+void LCD_sendCommand(unsigned char command){
     LCD_RW = 0;
     LCD_RS = 0;
     LCD_E = 1;
@@ -57,7 +58,7 @@ void LCD_sendCommand(unsigned char command) {
     LCD_E = 0;
 }
 
-void LCD_sendData(unsigned char data) {
+void LCD_sendData(unsigned char data){
     LCD_RW = 0;
     LCD_RS = 1;
     LCD_E = 1;
@@ -66,20 +67,32 @@ void LCD_sendData(unsigned char data) {
     LCD_E = 0;
 }
 
-void LCD_print(unsigned char *string) {
-    while (*string) {
+void LCD_print(unsigned char* string){
+    while(*string){
         LCD_sendData(*string++);
     }
 }
 
-void LCD_setCursor(unsigned char row, unsigned char col) {
+void LCD_setCursor(unsigned char row, unsigned char col){
     unsigned char address;
-    if (row == 1) {
+    if (row == 1){
         address = LCD_CURSOR + LINE1 + col;
-    } else if (row == 2) {
+    }
+    if (row == 2){
         address = LCD_CURSOR + LINE2 + col;
     }
     LCD_sendCommand(address);
+}
+
+
+void LCD_init(){
+    __delay_ms(20);
+    LCD_sendCommand(LCD_CONFIG);
+    __delay_us(50);
+    LCD_sendCommand(LCD_ON);
+    __delay_us(50);
+    LCD_sendCommand(LCD_CLEAR);
+    __delay_ms(2);
 }
 
 void LCD_clear() {
@@ -87,104 +100,77 @@ void LCD_clear() {
     __delay_ms(2);
 }
 
-void LCD_init() {
-    __delay_ms(20);
-    LCD_sendCommand(LCD_CONFIG);
-    __delay_us(50);
-    LCD_sendCommand(LCD_ON);
-    __delay_us(50);
-    LCD_clear();
-}
+void displayTime(int player1_time, int player2_time) {
+    char buffer[16];
+    
+    int minutes1 = player1_time / 60;
+    int seconds1 = player1_time % 60;
+    int minutes2 = player2_time / 60;
+    int seconds2 = player2_time % 60;
 
-void LCD_printChar(char c) {
-    LCD_sendData((unsigned char)c);
-}
+    LCD_setCursor(1, 0);
+    sprintf(buffer, "Player 1: %02d:%02d", minutes1, seconds1);
+    LCD_print((unsigned char *)buffer);
 
-void LCD_printTime(int minutes, int seconds) {
-    LCD_printChar((minutes / 10) + '0');
-    LCD_printChar((minutes % 10) + '0');
-    LCD_printChar(':');
-    LCD_printChar((seconds / 10) + '0');
-    LCD_printChar((seconds % 10) + '0');
-}
-
-void display_time(unsigned char row, int minutes, int seconds) {
-    LCD_setCursor(row, 0);
-    LCD_printTime(minutes, seconds);
+    LCD_setCursor(2, 0);
+    sprintf(buffer, "Player 2: %02d:%02d", minutes2, seconds2);
+    LCD_print((unsigned char *)buffer);
 }
 
 int main(void) {
-    TRISA = 0x0000;
-    TRISB = 0xFFFF;
-    TRISD = 0xFFFF; // Configure PORTD as input
-
-    LCD_init();
+    TRISB = 0x7FFF;
+    TRISD = 0x0000;
+    TRISE = 0x0000;
+    TRISA = 0X0000;
+    
+    LCD_init(); 
 
     int player1_time = 600;
     int player2_time = 600;
-    int current_player = 1;
-    int is_started = 0;
+    int current_player = 2;
+    unsigned char currentS6 = 0, currentS7 = 0, prevS6 = 0, prevS7 = 0;
 
-    int prevS6 = PORTDbits.RD6;
-    int currentS6;
-    int prevS7 = PORTDbits.RD7;
-    int currentS7;
+    displayTime(player1_time, player2_time);
 
-    LCD_clear();
-    display_time(1, player1_time / 60, player1_time % 60);
-    display_time(2, player2_time / 60, player2_time % 60);
-
-    while (1) {
-        prevS7 = PORTDbits.RD7; 
-        __delay_ms(998); 
+    while(1) {
+        prevS6 = PORTDbits.RD6;
+        prevS7 = PORTDbits.RD7;
+        __delay_ms(1000);
+        currentS6 = PORTDbits.RD6;
         currentS7 = PORTDbits.RD7;
 
-        if (currentS7 != prevS7) {
-            if (currentS7 == 1) {
-                is_started = 1; 
-            }
-            prevS7 = currentS7;
+        if (currentS6 - prevS6 == -1) {
+            current_player = 1;
         }
-
-        if (is_started) {
-            prevS6 = PORTDbits.RD6;
-            __delay_ms(998);
-            currentS6 = PORTDbits.RD6;
-
-            if (currentS6 != prevS6) {
-                if (currentS6 == 1) {
-                    current_player = (current_player == 1) ? 2 : 1;
-                }
-                prevS6 = currentS6;
-            }
-
+        
+        if (currentS7 - prevS7 == -1) {
             if (current_player == 1) {
-                if (player1_time > 0) {
-                    player1_time--;
-                    display_time(1, player1_time / 60, player1_time % 60);
-                }
+                player1_time += 30;
             } else {
-                if (player2_time > 0) {
-                    player2_time--;
-                    display_time(2, player2_time / 60, player2_time % 60);
-                }
-            }
-
-            if (player1_time == 0 || player2_time == 0) {
-                break;
+                player2_time += 30;
             }
         }
-    }
 
-    LCD_clear();
-    __delay_ms(2);
-    if (player1_time == 0) {
-        LCD_setCursor(1, 0);
-        LCD_print((unsigned char *)"Player 2 Wins!");
-    } else if (player2_time == 0) {
-        LCD_setCursor(1, 0);
-        LCD_print((unsigned char *)"Player 1 Wins!");
-    }
+        if (current_player == 1 && player1_time > 0) {
+            player1_time--;
+        } else if (current_player == 2 && player2_time > 0) {
+            player2_time--;
+        }
 
+        displayTime(player1_time, player2_time);
+
+        if (player1_time == 0 || player2_time == 0) {
+            LCD_clear();
+            if (player1_time == 0) {
+                LCD_setCursor(1, 0);
+                LCD_print("Player 2 wins");
+            } else {
+                LCD_setCursor(1, 0);
+                LCD_print("Player 1 wins");
+            }
+        }
+
+    }
+    
     return 0;
 }
